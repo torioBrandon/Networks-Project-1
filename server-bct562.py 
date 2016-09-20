@@ -1,0 +1,23 @@
+#Brandon Torio
+#bct562
+#networks Project 1
+
+from socket import *
+
+serverName = 'localhost'
+serverPort = 12000
+
+serverSocket = socket(AF_INET, SOCK_STREAM)
+serverSocket.bind(('', serverPort))
+serverSocket.listen(1)
+print ('created a socket')
+
+while 1:
+		connectionSocket, addr = serverSocket.accept()
+		sentence = connectionSocket.recv(2048)
+		txtSentence = sentence.decode()
+		print('This came from the client:' + txtSentence)
+		capitalizedSentence = txtSentence.upper()
+		sendcapital = capitalizedSentence.encode()
+		connectionSocket.send(sendcapital)
+		connectionSocket.close()
