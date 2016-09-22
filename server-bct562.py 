@@ -1,23 +1,108 @@
-#Brandon Torio
+#Brandon Torio 
 #bct562
 #networks Project 1
 
 from socket import *
+import time
+import os.path
 
 serverName = 'localhost'
-serverPort = 12000 #this needs to not be hardcoded 
+serverPort = 12005 #this needs to not be hardcoded 
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
-print ('created a socket')
+#print ('created a socket')
+#error codes we might need to send: 
+	#404 not found
+	#304 not modified 
+	#505 HTTP version not supported 
+	#400 bad request (junk case)
+	#415 unsupported media type 
+
+def parse_message(input):
+	#here we will check the contents of the message for correctness
+	words = input.split()
+	errorMessage = "200 OK"
+	currTime = time.gmtime()
+	currTimeString = time.strftime('%a, %d %b %Y %H:%M:%S %Z', currTime)
+	filename = words[1]
+	#errorResponse = "HTTP/1.1 " + errorMessage + "\r\nDate:"  + currTimeString + "\r\nServer:Brandon/1.3.0\r\nContent-type:text/html;charset=utf8\r\n\r\n"
+	errorResponse = "HTTP/1.1 " + errorMessage + "\r\n\r\n"
+
+	firstLine = input.split("\r\n")
+	lengthCheck = firstLine[0].split() #this is to check for the junk case
+	if len(lengthCheck) > 3:
+		errorMessage = "400 Bad Request"
+		return errorResponse.encode()
+
+	if words[0] != "GET":
+		errorMessage = "501 error"
+		errorResponse = "HTTP/1.1 " + errorMessage + "\r\nDate:"  + currTimeString + "\r\nServer:Brandon/1.3.0\r\nContent-type:text/html;charset=utf8\r\n\r\n"
+		return errorResponse
+	if os.path.isfile(filename) is False:
+		errorMessage = "404 File Not Found"
+		return errorResponse.encode()
+	else:
+		#print("the file was found")
+		if ".txt" in filename: 
+			print("its a .txt file, named" + filename)
+			filetype = "txt"
+			f = open(filename, 'r')
+		elif ".jpg" in filename:
+			filetype = "jpg"
+			print("its a .jpg")
+			f = open(filename, 'rb')
+			errorResponse = errorResponse.encode()
+			for line in f:
+				errorResponse2 = errorResponse + line + "\n"
+			return errorResponse2
+		elif ".jpeg" in filename:
+			filetype = "jpeg"
+			f = open(filename, 'rb')
+			image = true
+		elif ".htm" in filename:
+			filetype = ".htm"
+			f = open(filename, 'r')
+		elif ".html" in filename:
+			filetype = ".html"
+			f = open(filename, 'r')
+		else:
+			errorMessage = "415 unsupported file type"
+			errorResponse = "HTTP/1.1 " + errorMessage + "\r\nDate:"  + currTimeString + "\r\nServer:Brandon/1.3.0\r\nContent-type:text/html;charset=utf8\r\n\r\n"
+			return errorResponse.encode()
+		print("are we getting here")
+		# for line in f: 
+		# 	errorResponse = errorResponse + line + "\n"
+		transformer = f.read(8192)
+		transformerFinal = transformer
+		transformerFinal = transformer.encode()
+		finalHeader = errorResponse.encode() + transformerFinal
+
+		print(errorResponse)
+		return finalHeader
+
+
+	if words[2] != "HTTP/1.1":
+		errorMessage = "505 HTTP Version Not Supported"
+		errorResponse = "HTTP/1.1 " + errorMessage + "\r\n\r\n"
+		return errorResponse.encode()
+	if words[3] != "Host:":
+		errormessage = "Bad request"
+		errorResponse = "HTTP/1.1 " + errorMessage + "\r\nDate:"  + currTimeString + "\r\nServer:Brandon/1.3.0\r\nContent-type:text/html;charset=utf8\r\n\r\n"
+		return errorResponse.encode()
+	#print(words)
+	return errorResponse.encode()
 
 while 1:
-		connectionSocket, addr = serverSocket.accept()
-		sentence = connectionSocket.recv(2048)
-		txtSentence = sentence.decode()
-		print('This came from the client:' + txtSentence)
-		capitalizedSentence = txtSentence.upper()
-		sendcapital = capitalizedSentence.encode()
-		connectionSocket.send(sendcapital)
-		connectionSocket.close()
+	connectionSocket, addr = serverSocket.accept()
+	sentence = connectionSocket.recv(2048)
+	txtSentence = sentence.decode()
+
+	#call function to evaluate the sentence?
+	response = parse_message(txtSentence)
+
+	#print('This came from the client:' + txtSentence)
+	connectionSocket.send(response)
+	connectionSocket.close()
+
