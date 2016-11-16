@@ -13,7 +13,7 @@ filename = sys.argv[3]
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((serverName,serverPort))
 
-message = 'GET ' + filename + ' HTTP/1.1' + '\r\n'
+message = 'whom ' + filename + ' HTTP/1.2' + '\r\n'
 message += 'Host: www.cs.utexas.edu\r\n\r\n'  
 clientSocket.send(message.encode())
 response = clientSocket.recv(2048)
